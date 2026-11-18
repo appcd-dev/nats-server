@@ -13,7 +13,13 @@ RUN apk add --no-cache ca-certificates tzdata \
     && update-ca-certificates
 
 ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
-RUN GOBIN=/tmp/bin go install -trimpath github.com/nats-io/nats-server/v2@v2.15.3 \
+# go install refuses GOBIN when cross-compiling, and then writes to
+# $GOPATH/bin/$GOOS_$GOARCH. Copy whichever path it used.
+RUN go install -trimpath github.com/nats-io/nats-server/v2@v2.15.3 \
+    && src="$(go env GOPATH)/bin/${TARGETOS}_${TARGETARCH}/nats-server" \
+    && if [ ! -x "$src" ]; then src="$(go env GOPATH)/bin/nats-server"; fi \
+    && mkdir -p /tmp/bin \
+    && cp "$src" /tmp/bin/nats-server \
     && go version -m /tmp/bin/nats-server | grep 'nats-server/v2' | grep -q 'v2.15.3' \
     && mkdir -p /out/usr/local/bin /out/etc/ssl/certs /out/etc/nats /out/usr/share \
     && cp /tmp/bin/nats-server /out/usr/local/bin/nats-server \
