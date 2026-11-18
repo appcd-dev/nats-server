@@ -88,7 +88,7 @@ RUN chmod 755 /usr/local/bin/nats-server /usr/local/bin/docker-entrypoint.sh
 
 FROM scratch
 
-COPY --from=rootfs /
+COPY --from=rootfs / /
 
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     NATS_SERVER=2.15.3
