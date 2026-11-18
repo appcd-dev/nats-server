@@ -4,12 +4,15 @@
 # This image is one layer: a scratch root with the static binary, certs, and
 # the default config. There is no Alpine and no zlib.
 
-FROM golang:1.27.3-alpine3.24 AS build
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine3.24 AS build
+
+ARG TARGETOS
+ARG TARGETARCH
 
 RUN apk add --no-cache ca-certificates tzdata \
     && update-ca-certificates
 
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN GOBIN=/tmp/bin go install -trimpath github.com/nats-io/nats-server/v2@v2.15.3 \
     && go version -m /tmp/bin/nats-server | grep 'nats-server/v2' | grep -q 'v2.15.3' \
     && mkdir -p /out/usr/local/bin /out/etc/ssl/certs /out/etc/nats /out/usr/share \
